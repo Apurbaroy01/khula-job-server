@@ -41,20 +41,41 @@ async function run() {
       const query = { _id: new ObjectId(id) }
       const result = await jobCllation.findOne(query)
       res.send(result)
+    });
 
-
-      app.post('/Application-jobs', async(req, res) => {
-      const body= req.body;
+    app.post('/Application-jobs', async (req, res) => {
+      const application = req.body;
       console.log(body)
-      const result = await applicationCllation.insertOne(body)
+      const result = await applicationCllation.insertOne(application)
       res.send(result)
     });
 
+    app.get('/Application-jobs', async (req, res) => {
+      const email = req.query.email;
+      const query= {applicant_email: email}
+      const result = await applicationCllation.find(query).toArray();
+
+      for (const application of result) {
+            console.log(application.job_id)
+            const query1 = { _id: new ObjectId(application.job_id) }
+            const job = await jobCllation.findOne(query1)
+            if (job) {
+                application.title = job.title;
+                application.company = job.company;
+                application.company_logo = job.company_logo;
+                application.location = job.location;
+            }
+        }
+
+
+      res.send(result)
+
     });
 
-    app.get('/',  (req, res) => {
-      
-    });
+
+
+
+
 
 
   } catch (error) {
