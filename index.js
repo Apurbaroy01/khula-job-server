@@ -45,7 +45,7 @@ async function run() {
 
     app.post('/Application-jobs', async (req, res) => {
       const application = req.body;
-      console.log(body)
+      console.log(application)
       const result = await applicationCllation.insertOne(application)
       res.send(result)
     });
@@ -56,8 +56,9 @@ async function run() {
       const result = await applicationCllation.find(query).toArray();
 
       for (const application of result) {
-            console.log(application.job_id)
-            const query1 = { _id: new ObjectId(application.job_id) }
+          const jobId = application.job_id;
+            console.log(jobId)
+            const query1 = { _id: new ObjectId(jobId) }
             const job = await jobCllation.findOne(query1)
             if (job) {
                 application.title = job.title;
