@@ -29,9 +29,21 @@ async function run() {
     const jobCllation = client.db("khulna-Job").collection("jobs");
     const applicationCllation = client.db("khulna-Job").collection("Application-jobs");
 
+    app.post('/jobs', async (req, res) => {
+      const job = req.body;
+      console.log(job)
+      const result = await jobCllation.insertOne(job)
+      res.send(result)
+    });
 
     app.get('/jobs', async (req, res) => {
-      const result = await jobCllation.find().toArray();
+      const email= req.query.email;
+      let query = {};
+      if(email){
+        query= {email: email}
+      }
+
+      const result = await jobCllation.find(query).toArray();
       res.send(result)
     });
 
