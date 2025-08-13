@@ -37,10 +37,10 @@ async function run() {
     });
 
     app.get('/jobs', async (req, res) => {
-      const email= req.query.email;
+      const email = req.query.email;
       let query = {};
-      if(email){
-        query= {email: email}
+      if (email) {
+        query = { email: email }
       }
 
       const result = await jobCllation.find(query).toArray();
@@ -59,35 +59,59 @@ async function run() {
       const application = req.body;
       console.log(application)
       const result = await applicationCllation.insertOne(application)
+
+
+      const id= application.job_id;
+      const query = { _id: new ObjectId(id) }
+      const job = await jobCllation.findOne(query)
+
+      let newCount = 0;
+      if(job.aplocationCount){
+        newCount = job.aplocationCount + 1;
+      }else{
+        newCount = 1;
+      }
+
+      const filter ={ _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          aplocationCount: newCount
+        }
+      }
+      const updateResult = await jobCllation.updateOne(filter, updateDoc);
+      console.log(updateResult)
+
       res.send(result)
     });
 
     app.get('/Application-jobs', async (req, res) => {
       const email = req.query.email;
-      const query= {applicant_email: email}
+      const query = { applicant_email: email }
       const result = await applicationCllation.find(query).toArray();
 
       for (const application of result) {
-          const jobId = application.job_id;
-            console.log(jobId)
-            const query1 = { _id: new ObjectId(jobId) }
-            const job = await jobCllation.findOne(query1)
-            if (job) {
-                application.title = job.title;
-                application.company = job.company;
-                application.company_logo = job.company_logo;
-                application.location = job.location;
-            }
+        const jobId = application.job_id;
+        console.log(jobId)
+        const query1 = { _id: new ObjectId(jobId) }
+        const job = await jobCllation.findOne(query1)
+        if (job) {
+          application.title = job.title;
+          application.company = job.company;
+          application.company_logo = job.company_logo;
+          application.location = job.location;
         }
-
+      };
 
       res.send(result)
 
     });
 
-
-
-
+    app.get('/Application/jobs/:id', async (req, res) => {
+      const jobId = req.params.id;
+      const query = { job_id: jobId }
+      const result = await applicationCllation.find(query).toArray();
+      res.send(result)
+    })
 
 
 
