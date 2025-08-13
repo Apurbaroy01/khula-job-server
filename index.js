@@ -112,6 +112,13 @@ async function run() {
       const result = await applicationCllation.find(query).toArray();
       res.send(result)
     })
+    app.get('/Application/jobApplication/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) }
+      const result = await applicationCllation.findOne(query);
+      res.send(result)
+    })
 
 
 
