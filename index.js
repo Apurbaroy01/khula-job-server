@@ -121,6 +121,22 @@ async function run() {
     })
 
 
+    app.patch('/Application-jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      const application = req.body;
+      console.log(application, id)
+      const query = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          status: application.status,
+        }
+      }
+      const Result = await applicationCllation.updateOne(query, updateDoc );
+      res.send(Result)
+      
+    });
+
+
 
   } catch (error) {
     console.error('error❌', error)
