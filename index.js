@@ -1,11 +1,35 @@
 const express = require('express')
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
+
 app.use(express.json());
+app.use(cookieParser());
+
+const verifyJWT = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: 'Unauthorized access' });
+  }
+
+  jwt.verify(token, process.env.JWT_secret, (err, decoded) => {
+    if (err) {
+      console.log("JWT Verify Error:", err.message); // debug
+      return res.status(403).send({ error: true, message: "Invalid token" });
+    }
+    req.user = decoded; // decoded data save
+    next();
+  });
+};
 
 
 
@@ -28,6 +52,21 @@ async function run() {
 
     const jobCllation = client.db("khulna-Job").collection("jobs");
     const applicationCllation = client.db("khulna-Job").collection("Application-jobs");
+
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.secret_key, { expiresIn: '1h' });
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: false, // Set to true if using HTTPS
+          sameSite: 'Strict', // Adjust as needed
+        })
+        .send({ success: true, token });
+
+
+
+    })
 
     app.post('/jobs', async (req, res) => {
       const job = req.body;
@@ -61,18 +100,18 @@ async function run() {
       const result = await applicationCllation.insertOne(application)
 
 
-      const id= application.job_id;
+      const id = application.job_id;
       const query = { _id: new ObjectId(id) }
       const job = await jobCllation.findOne(query)
 
       let newCount = 0;
-      if(job.aplocationCount){
+      if (job.aplocationCount) {
         newCount = job.aplocationCount + 1;
-      }else{
+      } else {
         newCount = 1;
       }
 
-      const filter ={ _id: new ObjectId(id) }
+      const filter = { _id: new ObjectId(id) }
       const updateDoc = {
         $set: {
           aplocationCount: newCount
@@ -84,9 +123,16 @@ async function run() {
       res.send(result)
     });
 
-    app.get('/Application-jobs', async (req, res) => {
+    app.get('/Application-jobs',verifyJWT, async (req, res) => {
       const email = req.query.email;
       const query = { applicant_email: email }
+
+      if (req.user?.email !== req.query.email) {
+        return res.status(403).send({ error: true, message: "Forbidden access" });
+      }
+
+
+
       const result = await applicationCllation.find(query).toArray();
 
       for (const application of result) {
@@ -131,9 +177,9 @@ async function run() {
           status: application.status,
         }
       }
-      const Result = await applicationCllation.updateOne(query, updateDoc );
+      const Result = await applicationCllation.updateOne(query, updateDoc);
       res.send(Result)
-      
+
     });
 
 
