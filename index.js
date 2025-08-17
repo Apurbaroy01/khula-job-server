@@ -8,28 +8,29 @@ const port = process.env.PORT || 5000;
 
 app.use(cors({
   origin: "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 }));
 
 app.use(express.json());
 app.use(cookieParser());
 
-const verifyJWT = (req, res, next) => {
+const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
   if (!token) {
-    return res.status(401).send({ message: 'Unauthorized access' });
+    return res.status(403).send({ message: "Forbidden: No token" });
   }
 
-  jwt.verify(token, process.env.JWT_secret, (err, decoded) => {
+  jwt.verify(token, process.env.secret_key, (err, decoded) => {
     if (err) {
-      console.log("JWT Verify Error:", err.message); // debug
-      return res.status(403).send({ error: true, message: "Invalid token" });
+      return res.status(403).send({ message: "Forbidden: Invalid token" });
     }
-    req.user = decoded; // decoded data save
+    req.user = decoded;
     next();
   });
 };
+
+
 
 
 
@@ -56,17 +57,12 @@ async function run() {
     app.post('/jwt', async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.secret_key, { expiresIn: '1h' });
-      res
-        .cookie('token', token, {
-          httpOnly: true,
-          secure: false, // Set to true if using HTTPS
-          sameSite: 'Strict', // Adjust as needed
-        })
-        .send({ success: true, token });
-
-
-
-    })
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: false, // Set to true if using HTTPS
+        sameSite: "lax", // Adjust as needed
+      }).send({ success: true, token });
+    });
 
     app.post('/jobs', async (req, res) => {
       const job = req.body;
@@ -123,7 +119,7 @@ async function run() {
       res.send(result)
     });
 
-    app.get('/Application-jobs',verifyJWT, async (req, res) => {
+    app.get('/Application-jobs',verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { applicant_email: email }
 
