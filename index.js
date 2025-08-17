@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 app.use(cors({
   origin: "http://localhost:5173",
-  methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 }));
 
@@ -63,6 +63,14 @@ async function run() {
         sameSite: "lax", // Adjust as needed
       }).send({ success: true, token });
     });
+    app.post('/logout', (req, res) => {
+      res
+      .clearCookie('token',{
+        httpOnly:true,
+        secure: false
+      })
+      .send({success:true})
+    })
 
     app.post('/jobs', async (req, res) => {
       const job = req.body;
@@ -119,7 +127,7 @@ async function run() {
       res.send(result)
     });
 
-    app.get('/Application-jobs',verifyToken, async (req, res) => {
+    app.get('/Application-jobs', verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { applicant_email: email }
 
