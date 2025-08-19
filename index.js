@@ -87,10 +87,19 @@ async function run() {
       if (email) {
         query = { email: email }
       }
-
       const result = await jobCllation.find(query).toArray();
       res.send(result)
     });
+
+
+    app.delete('/jobs/:id', async (req, res) => {
+      const id= req.params.id;
+      console.log(id)
+      const query={_id: new ObjectId(id)}
+      const result = await jobCllation.deleteOne(query)
+      res.send(result)
+    });
+
 
     app.get('/jobs/:id', async (req, res) => {
       const id = req.params.id;
@@ -200,7 +209,7 @@ run();
 
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Hello Apurba!')
 })
 
 app.listen(port, () => {
