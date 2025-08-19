@@ -183,6 +183,16 @@ async function run() {
     })
 
 
+    app.delete('/Application-jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query={_id: new ObjectId(id)}
+      const result=await applicationCllation.deleteOne(query)
+      res.send(result)
+
+    });
+
+
     app.patch('/Application-jobs/:id', async (req, res) => {
       const id = req.params.id;
       const application = req.body;
