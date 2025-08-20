@@ -7,7 +7,10 @@ const app = express()
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "https://next-heir.netlify.app",
+    "http://localhost:5173"
+  ],
   methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 }));
@@ -48,7 +51,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     console.log(" You successfully connected to MongoDB✅!");
 
     const jobCllation = client.db("khulna-Job").collection("jobs");
