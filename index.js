@@ -86,11 +86,20 @@ async function run() {
 
     app.get('/jobs', async (req, res) => {
       const email = req.query.email;
+      const sort = req.query?.sort;
       let query = {};
+      let sortQuery={};
+
       if (email) {
         query = { email: email }
       }
-      const result = await jobCllation.find(query).toArray();
+
+      if(sort ==="true"){
+        sortQuery={"salaryRange.min": -1}
+      }
+
+      
+      const result = await jobCllation.find(query).sort(sortQuery).toArray();
       res.send(result)
     });
 
