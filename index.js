@@ -11,7 +11,7 @@ app.use(cors({
     "https://next-heir.netlify.app",
     "http://localhost:5173"
   ],
-  methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 }));
 
@@ -62,19 +62,19 @@ async function run() {
       const token = jwt.sign(user, process.env.secret_key, { expiresIn: '5h' });
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV==='production' ,
-        sameSite: process.env.NODE_ENV==='production' ? "none": "strict"
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict"
       }).send({ success: true, token });
     });
 
     app.post('/logout', (req, res) => {
       res
-      .clearCookie('token',{
-        httpOnly:true,
-        secure: process.env.NODE_ENV==='production' ,
-        sameSite: process.env.NODE_ENV==='production' ? "none": "strict"
-      })
-      .send({})
+        .clearCookie('token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict"
+        })
+        .send({})
     })
 
     app.post('/jobs', async (req, res) => {
@@ -84,37 +84,47 @@ async function run() {
       res.send(result)
     });
 
+
+
     app.get('/jobs', async (req, res) => {
       const email = req.query.email;
       const sort = req.query?.sort;
       const search = req.query?.search;
+      const page = parseInt(req.query.page)
+      const size = parseInt(req.query.size)
+      console.log(page,size);
+
       let query = {};
-      let sortQuery={};
-      
+      let sortQuery = {};
+
 
       if (email) {
         query = { email: email }
       }
 
-      if(sort ==="true"){
-        sortQuery={"salaryRange.min": -1}
+      if (sort === "true") {
+        sortQuery = { "salaryRange.min": -1 }
       }
 
-      if(search){
-        query.location={$regex:search, $options: "i"}
+      if (search) {
+        query.location = { $regex: search, $options: "i" }
       }
       console.log(query)
 
-      
-      const result = await jobCllation.find(query).sort(sortQuery).toArray();
+
+      const result = await jobCllation.find(query).sort(sortQuery).skip(page * size).limit(size).toArray();
       res.send(result)
     });
 
+    app.get('/productCount', async (req, res) => {
+      const count = await jobCllation.estimatedDocumentCount();
+      res.send({ count })
+    });
 
     app.delete('/jobs/:id', async (req, res) => {
-      const id= req.params.id;
+      const id = req.params.id;
       console.log(id)
-      const query={_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await jobCllation.deleteOne(query)
       res.send(result)
     });
@@ -131,7 +141,7 @@ async function run() {
     app.post('/Application-jobs', async (req, res) => {
       const application = req.body;
       console.log(application)
-      
+
       const result = await applicationCllation.insertOne(application)
 
 
@@ -158,7 +168,7 @@ async function run() {
       res.send(result)
     });
 
-    app.get('/Application-jobs',verifyToken, async (req, res) => {
+    app.get('/Application-jobs', verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { applicant_email: email }
 
@@ -205,8 +215,8 @@ async function run() {
     app.delete('/Application-jobs/:id', async (req, res) => {
       const id = req.params.id;
       console.log(id)
-      const query={_id: new ObjectId(id)}
-      const result=await applicationCllation.deleteOne(query)
+      const query = { _id: new ObjectId(id) }
+      const result = await applicationCllation.deleteOne(query)
       res.send(result)
 
     });
